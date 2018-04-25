@@ -1,0 +1,33 @@
+% !TEX root = ../my-thesis.tex
+%
+\chapter{Conclusioni e sviluppi futuri}
+\label{sec:conclusion}
+
+I test condotti sul progetto vanno ripetuti su un insieme più esteso di predicati e frasi, ma sembrano già confermare la possibilità di utilizzare un sistema simile in un ambiente di produzione di Linked Data.
+ 
+I principali vantaggi del sistema proposto sono: 
+\begin{itemize}
+\item implementare facilmente un sistema di distant supervision;
+\item migliorare le prestazioni della distant supervision;
+\item ottenere risultati che approssimano lo stato dell'arte con un input testuale di piccole dimensioni;
+\item possibilità di miglioramento iterativo dei risultati, applicando nuove parole chiave o labeling functions;
+\item possibilità di modificare o sostituire modularmente i componenti della pipeline;
+\item supporto multilingua;
+\item scalabilità del sistema.
+\end{itemize}
+
+Un riscontro particolarmente interessante è quello di aver raggiunto risultati positivi pur mantenendo le configurazioni di default per i classificatori e senza utilizzare un insieme di supporto di esempi etichettati a mano. Questo consente l'utilizzo del progetto limitando l'apporto umano alla sola definizione di parole chiave e labeling function.
+Questo risultato non toglie che debbano essere svolte ulteriori analisi sull'impostazione degli iperparametri di configurazione dei modelli di machine learning ed in particolare l'assegnazione della distribuzione di probabilità a priori delle labeling funcition nel modello generativo. 
+
+I limiti maggiori sono stati individuati nell'entity linking e nella mancanza dell'utilizzo di tecniche di coreference resolution.
+
+Il servizio DBpedia Lookup, pur essendo preciso, ha dimostrato di essere il collo di bottiglia della pipeline. Piuttosto che ripetere l'entity linking in ogni fase di labeling sarebbe forse più opportuno svolgerlo una volta per tutte in fase di estrazione dei candidati. Merita un ulteriore approfondimento la letteratura relativa (in particolare il survey di \citet{Shen2015EntityLW}) per trovare strumenti alternativi, altrettanto precisi, ma più rapidi.
+
+Un aspetto decisivo è rappresentato dalla generazione di etichette negative. L'utilizzo di parole chiave negative migliora di molto le prestazioni, ma deve essere integrato con altri approcci. Nei prossimi sviluppi si cercherà di integrare la tecnica utilizzata da \citet{Mintz2009DistantSF} in cui vengono etichettati come negativi tutti quegli esempi che sono istanza di relazioni diverse da quella che si sta esaminando.
+
+In futuro si cercherà inoltre di testare la pipeline su corpus in altre lingue. Questo può essere fatto semplicemente applicando diversi modelli linguistici per SpaCy e utilizzando corpus nella lingua scelta.
+
+Vanno monitorati i progressi dei software di NLP nella tecnica di coreference resolution. In particolare SpaCy sembra essere attualmente al lavoro per integrare questa funzionalità \cite{spacy_coref} che potenzialmente avrebbe un impatto molto positivo su questo progetto.
+
+
+

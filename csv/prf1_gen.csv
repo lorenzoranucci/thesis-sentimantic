@@ -1,0 +1,3 @@
+Predicato,TP,FP,TN,FN,P,R,F1
+dbo:birthPlace,13,72,3758,1,0.153,0.929,0.263
+dbo:spouse,12,48,3700,2,0.200,0.857,0.324

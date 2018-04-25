@@ -1,0 +1,7 @@
+Labeling function,j,Coverage,Overlaps,Conflicts
+LF\_distant\_supervision,0,0.001,0.001,0.001
+LF\_words\_between,1,0.104,0.066,0.017
+LF\_words\_left,2,0.007,0.005,0.001
+LF\_words\_right,3,0.003,0.002,0.001
+LF\_not\_words,4,0.009,0.006,0.001
+LF\_no\_word\_in\_sentence,5,0.602,0.08,0.009

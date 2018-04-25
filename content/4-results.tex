@@ -1,0 +1,63 @@
+\chapter{Test e Risultati}
+\label{sec:results}
+
+
+La pipeline sviluppata in questo lavoro è stata progettata per computare parallelamente input di grandi dimensioni e scalare in base alla potenza di calcolo e alla quantità di memoria a disposizione.
+Per tale motivo si è rivelato conveniente effettuare test con un hardware molto performante messo a disposizione dal servizio di cloud computing \textit{Amazon EC2}. La macchina utilizzata è ottimizzata per il machine learning e consiste di 36 CPU virtuali e 60GB di memoria RAM.
+
+Per facilitare il deploy del sistema sviluppato e dei servizi utilizzati ci si è serviti dell'infrastruttura di container Docker. In tale modo i test sono ripetibili in maniera omogenea e senza dipendere dalle caratteristiche dell'ambiente software utilizzato.
+
+Brat è un sistema di annotazione manuale di \textit{gold labeling} che il team di Snorkel ha integrato nel progetto per annotare dati usati per valutare i test. Si tratta di un software in grado di gestire un archivio di documenti testuali e metterli a disposizione dell'utente che effettua l'annotazione tramite interfaccia web e tool grafici. L'integrazione fatta dal team di Snorkel consente di fare deploy su Brat dei documenti categorizzati come "test". In maniera altrettanto automatica, le annotazioni prodotte a mano in Brat vengono importate nel database di Snorkel. Tuttavia sono stati riscontrati dei problemi nel lancio del web server di Brat tramite le API di Snorkel. Per questo motivo si è utilizzato, anche in questo caso, l'immagine Docker ufficiale di Brat. Utilizzando lo stesso file system previsto dall'integrazione di Brat in Snorkel è stato possibile mantenere la validità dell'integrazione pur utilizzando il container Docker.
+
+Il servizio Lookup ha dimostrato delle limitazioni in caso di esecuzione in ambiente hardware molto performante. Il servizio si è rivelato inadatto a ricevere parallelamente un elevato numero di richieste, aumentando gradualmente la latenza del tempo di risposta durante l'esecuzione della pipeline. A causa di tale problema si è fatto uso della componente Stack di Docker per replicare il servizio e distribuire il carico delle richieste in maniera bilanciata tra le varie repliche. Si è raggiunto un buon compromesso tra performance e consumo di memoria utilizzando 32 repliche del servizio e schedulando il riavvio periodico del servizio ogni 5 minuti.
+
+I test sono stati condotti su un corpus ridotto di 100.000 frasi e i due predicati Linked Data \textit{dbo:birthPlace} e \textit{dbo:spouse}. 
+
+La valutazione è stata svolta annotando 16 articoli di Wikipedia per le due relazioni. Gli articoli sono stati selezionati per essere rilevanti e insidiosi: si sono scelte solo pagine di persone e, in buona parte, sportivi per cui la presenza di named entity GPE è elevata e può mettere in difficoltà la distant supervision (es. la coppia "Totti"-"Roma" è un esempio negativo che la distant supervision è incapace di distinguere).
+
+L'esecuzione dell'intera pipeline per ogni predicato ha impiegato un tempo medio di 19 minuti.
+
+
+
+\section{Risultati}
+\label{sec:results:results}
+
+Una volta etichettati manualmente gli esempi di test con Brat, le utilità implementate in Snorkel permettono la valutazione automatica delle labeling function e del modello discriminativo finale.
+
+Le labeling function vengono valutate in base alla copertura, alla coincidenza e ai conflitti dei segnali prodotti.
+Facendo un confronto tra i risultati del progetto \textit{Spouse} condotto dal team di Snorkel \cite{snorkel_spouse_result_lfs} e quelli ottenuti per il predicato \textit{dbo:spouse} (Tab.\ref{tab:results:lfs1}) si può notare un aumento della copertura della distant supervision dall'1\% al 7\%. Questo risultato ha due motivazioni: l'impatto dell'entity linking eseguito con DBpedia Lookup, che incrementa la copertura al 3\% e la restituzione di un'etichetta negativa in maniera pseudocasuale. La validità di tale approccio è confermata dal valore dei conflitti che rimane stabilmente basso e quello delle sovrapposizioni che aumenta dal 0,9\% al 5,9\%.
+
+I risultati riguardanti le labeling function per il caso \textit{dbo:birthPlace} (Tab. \ref{tab:results:lfs2}) mettono in luce come la sola distant supervision può essere inefficace in casi specifici come questo. In tal caso la copertura è bassa: risultato poco sorprendente vista la forte occorrenza di coppie persona-località negli esempi di test considerati. Ciò che maggiormente va considerato è il numero di conflitti della distant supervision dieci volte superiore al caso Spouse e pari al 50\% delle etichette positive restituite. Tali etichette, probabilmente inesatte, vengono bilanciate dalla presenza della labeling function che controlla la presenza di parole chiave negative.
+
+\begin{table}[H]
+\csvautobooktabular{csv/dbospouselfs.csv}
+\caption{\textit{dbo:spouse}: statistiche delle labeling function.}
+\label{tab:results:lfs1}
+\end{table}
+
+\begin{table}[H]
+\csvautobooktabular{csv/dbobirthplacelfs.csv}
+\caption{\textit{dbo:birthPlace}: statistiche delle labeling function.}
+\label{tab:results:lfs2}
+\end{table}
+
+
+
+
+Le prestazioni del classificatore discriminativo sono riportate nella tabella \ref{tab:results:disc}. Analizzando le etichette prodotte si nota come per il predicato \textit{dbo:birthPlace} l'elevata presenza di falsi positivi è introdotta nelle stesse frasi che contengono un'etichetta vera positiva. In particolare, il caso più problematico è quello in cui oltre al luogo di nascita sono citati anche i nomi dei genitori. Questo schema ricorrente potrebbe essere rilevato da un'espressione regolare e quindi risolto da una labeling function specifica. In maniera simile, per il caso \textit{dbo:spouse} l'elevata presenza di falsi positivi è dovuta alla presenza di varie persone in frasi contenenti un'etichetta vera positiva, il caso più comune è quello della presenza dei nomi dei figli avuti dalla coppia. Anche in tal caso va valutato l'impatto di una labeling function apposita.
+Un ulteriore tentativo di riduzione dei falsi positivi può essere fatto assegnando una distribuzione di probabilità a priori alle funzioni di labeling in fase di allenamento del modello generativo. Assegnando una probabilità a priori più elevata alla distant supervision si stima di ridurre i problemi appena menzionati.
+
+\begin{table}[H]
+\csvautobooktabular{csv/prf1_disc.csv}
+\caption{ Statistiche modello discriminativo.}
+\label{tab:results:disc}
+\end{table}
+
+La valutazione delle triple "grezze" estratte coincide con la valutazione del modello discriminativo. Il risultato allo stato dell'arte è rappresentato dal lavoro di \citet{Nguyen2011EndtoEndRE}. Per poter confrontare i due progetti in maniera significativa sarebbe opportuno svolgere training e test sugli stessi dati, tuttavia del progetto di \citet{Nguyen2011EndtoEndRE} si conoscono solamente gli otto predicati che hanno avuto risultati migliori. Di conseguenza sono stati usati per il confronto i risultati medi di precisione, richiamo e misura F1 che sono pari rispettivamente a 0.82, 0.56 e 0.67. I risultati medi del lavoro di questa tesi sono invece: precisione 0.52, richiamo 0.85, F1 0.63. Dal confronto si nota come l'approccio con sola distant supervision abbia un richiamo basso ma alta precisione, mentre la tecnica con labeling function sia meno precisa ma con un elevato richiamo. Questo fa sì che comunque la misura F1 sia quasi identica nei due progetti.
+
+Le triple Linked Data estratte sono state valutate manualmente. Il numero totale di triple distinte estratte per il predicato \textit{dbo:birthPlace} è pari a 39 di cui 28 positive e 11 negative e per il predicato \textit{dbo:spouse} è pari a 22 di cui 15 positive e 7 negative.
+Questo risultato mostra come il problema di entity linking influenza anche l'estrazione finale di triple dalle proposizioni etichettate positivamente. Si noti che non tutte le menzioni di entità estratte hanno una corrispondente entità in DBpedia e che alcune frasi etichettate positivamente sono ridondanti, questo implica che:
+\begin{itemize}
+\item le triple estratte sono di numero molto inferiore alla frasi etichettate positivamente;
+\item molte frasi false positive non diventano triple poiché contengono menzioni a entità di secondaria rilevanza (nel caso specifico genitori o figli) che non sono presenti in DBpedia.
+\end{itemize}

@@ -1,0 +1,8 @@
+Labeling function,j,Accuracy,Coverage,Precision,Recall
+LF\_distant\_supervision,0,0.533,0.668,0.519,0.344
+LF\_words\_between,1,0.540,0.668,0.536,0.355
+LF\_words\_left,2,0.538,0.661,0.534,0.351
+LF\_words\_right,3,0.532,0.665,0.519,0.345
+LF\_not\_words,4,0.613,0.668,0.615,0.413
+LF\_no\_word\_in\_sentence,5,0.909,0.786,0.906,0.721
+
